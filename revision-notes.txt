@@ -1,0 +1,28 @@
+
+Kill processes with the "timeout" command.
+
+Grading process:
+
+- Given:
+  - A sub tarball
+  - A grading tarball
+
+Grading tarball:
+  - contains "_grading" sub dir containing
+  - grade.rb
+  - ruby libraries (e.g. steno.rb)
+  - whatever else
+
+steno.rb:
+  - Standard testing library.
+  - Collects env vars.
+  - Runs commands with timeout.
+  - Collects test output.
+  - 
+
+
+
+
+
+
+

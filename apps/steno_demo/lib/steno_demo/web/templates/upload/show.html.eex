@@ -1,0 +1,18 @@
+<h2>Show Upload</h2>
+
+<ul>
+
+  <li>
+    <strong>Name:</strong>
+    <%= @upload.name %>
+  </li>
+
+  <li>
+    <strong>Key:</strong>
+    <%= @upload.key %>
+  </li>
+
+</ul>
+
+<span><%= link "Edit", to: upload_path(@conn, :edit, @upload) %></span>
+<span><%= link "Back", to: upload_path(@conn, :index) %></span>
