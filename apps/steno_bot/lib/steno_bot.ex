@@ -3,16 +3,5 @@ defmodule StenoBot do
   Documentation for StenoBot.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> StenoBot.hello
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  # Maybe stuff goes here?
 end

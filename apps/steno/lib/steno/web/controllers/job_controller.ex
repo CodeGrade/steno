@@ -12,6 +12,8 @@ defmodule Steno.Web.JobController do
   end
 
   def create(conn, %{"job" => job_params}) do
+    cookie = :crypto.strong_rand_bytes(16) |> Base.encode16
+    job_params = Map.put(job_params, "cookie", cookie)
     with {:ok, %Job{} = job} <- Grading.create_job(job_params) do
       conn
       |> put_status(:created)

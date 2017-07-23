@@ -5,5 +5,5 @@ cs = JSON.parse(`lxc list --format=json`)
 cs.each do |cc|
   name = cc["name"]
   next unless name =~ /^steno-/
-  system(%Q{lxc stop --force "#{name}"})
+  system(%Q{lxc stop --force "#{name}" || lxc delete "#{name}"})
 end

@@ -105,6 +105,21 @@ defmodule StenoBot.Sandbox do
     %{ state | queue: :queue.snoc(state.queue, item) }
   end
 
+  def get_and_run_job(state) do
+    job = StenoBot.Queue.get()
+    if job do
+      run_job(state, job)
+    else
+      state
+    end
+  end
+
+  def run_job(state, job) do
+    IO.inspect(job)
+    IO.puts(make_driver(job))
+    state
+  end
+
   defp spawn_cmd({script, phase, args}) do
     args1 = Enum.join(Enum.map(args, &(~s["#{&1}"])), " ")
 
@@ -153,8 +168,18 @@ defmodule StenoBot.Sandbox do
     "#{sandbox_name_base()}-#{sandbox_id}"
   end
 
+  def make_driver(job) do
+    job = job
+    |> Map.drop(:__struct__, :__meta__)
+    |> Map.put(:timeout, 60)
+    |> Map.put(:cookie, :crypto.strong_rand_bytes(16) |> Base.encode16)
+    |> Enum.into([])
+    base = Application.app_dir(:steno_bot, "priv")
+    EEx.eval_file("#{base}/scripts/driver.pl.eex", Enum.into(job, []))
+  end
+
   ##
-  ## callbacks
+  ## callbacks from porcelain
   ##
   def handle_info({_src, :data, stream, data}, state) do
     serial = state.serial + 1

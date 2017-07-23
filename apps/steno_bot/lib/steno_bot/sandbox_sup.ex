@@ -44,6 +44,11 @@ defmodule StenoBot.Sandbox.Sup do
     {:reply, :ok, state}
   end
 
+  def handle_call(:run, _from, state) do
+    IO.puts "#{node()}: Got run request."
+    {:reply, :ok, state}
+  end
+
   def handle_info({:EXIT, pid, _reason}, state) do
     func = fn {sb_id, pp} ->
       if pp == pid do
@@ -62,9 +67,10 @@ defmodule StenoBot.Sandbox.Sup do
     end
   end
 
-  ###
-  ### support
   ##
+  ## support
+  ##
+
   defp start_sandboxes(state) do
     if :queue.len(state.kids) < state.count do
       sb_id = state.snum

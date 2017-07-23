@@ -4,7 +4,11 @@ defmodule Steno.Repo.Migrations.CreateSteno.Grading.Job do
   def change do
     create table(:grading_jobs) do
       add :sub_url, :string
+      add :sub_name, :string
       add :gra_url, :string
+      add :gra_name, :string
+      add :cookie, :string
+      add :timeout, :integer
       add :output, :text
       add :started_at, :utc_datetime
 

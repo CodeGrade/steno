@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+# -*- perl -*-
+use 5.18.0;
+use warnings FATAL => 'all';
+use IO::Handle;
+
+open my $shell, "|-", "su -c bash ubuntu";
+while (<DATA>) {
+    chomp;
+    $shell->say($_);
+}
+close $shell;
+
+__DATA__
+export COOKIE="<%= cookie %>"
+export TIMEOUT="<%= timeout %>"
+export SUB="<%= sub_name %>"
+export GRA="<%= gra_name %>"
+
+cd ~
+wget -O "$SUB" "<%= sub_url %>"
+wget -O "$GRA" "<%= gra_url %>"
+tar xzvf "$GRA"
+ruby -I_grading _grading/grade.rb

@@ -20,7 +20,7 @@ defmodule Steno.Web.Router do
   end
 
   # Other scopes may use custom stacks.
-  scope "/api", Steno.Web do
+  scope "/api/v1", Steno.Web do
     pipe_through :api
 
     resources "/jobs", JobController, except: [:new, :edit]
