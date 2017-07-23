@@ -24,7 +24,7 @@ defmodule Steno.Grading.Queue do
 
   def handle_call(:run, _from, state) do
     Enum.each :syn.get_members(:bots), fn bsup ->
-      GenServer.call(bsup, :run)
+      GenServer.call(bsup, :poke)
     end
     {:reply, :ok, state}
   end

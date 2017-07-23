@@ -20,6 +20,7 @@ defmodule StenoBot.Application do
     StenoBot.Sandbox.reap_old()
 
     # We're here.
+    :net_adm.world()
     :syn.init()
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

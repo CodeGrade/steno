@@ -51,6 +51,7 @@ defmodule Steno.Grading do
   """
   def create_job(attrs \\ %{}) do
     job = Job.changeset(%Job{}, attrs)
+    IO.inspect(job)
     {:ok, job} = Repo.insert(job)
     Steno.Grading.Queue.run()
     {:ok, job}
@@ -61,10 +62,17 @@ defmodule Steno.Grading do
   """
   def checkout_job() do
     Repo.transaction fn ->
-      Repo.one(from j in Job,
-        where: is_nil(j.output) and is_nil(j.started_at))
-      |> Job.changeset(%{started_at: DateTime.utc_now()})
-      |> Repo.update!
+      job = Repo.one from j in Job,
+        where: is_nil(j.output) and is_nil(j.started_at),
+        limit: 1
+      if job do
+        job
+        |> Job.changeset(%{started_at: DateTime.utc_now()})
+        |> Repo.update!
+        |> Map.drop([:__struct__, :__meta__])
+      else
+        Repo.rollback(:none)
+      end
     end
   end
 

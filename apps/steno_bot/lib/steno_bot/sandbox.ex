@@ -8,10 +8,9 @@ defmodule StenoBot.Sandbox do
       sb_id:  sandbox_id,
       serial: 0,
       output: [],
-      queue:  :queue.from_list([]),
       active: nil,
       ondata: nil,
-      phase:  "preboot",
+      phase: "preboot",
     }
     GenServer.start_link(__MODULE__, state0)
   end
@@ -20,29 +19,16 @@ defmodule StenoBot.Sandbox do
     GenServer.call(pid, {:listen, ondata})
   end
 
-  def exec(pid, phase, cmd) do
-    GenServer.call(pid, {:exec, phase, cmd})
-  end
-
-  def push(pid, src, dst) do
-    GenServer.call(pid, {:push, src, dst})
-  end
-
-  def dump(pid) do
-    GenServer.call(pid, :dump)
-  end
-
   def idle?(pid) do
     GenServer.call(pid, :idle?)
   end
 
-  def wait_idle(pid) do
-    if idle?(pid) do
-      :ok
-    else
-      :timer.sleep(100)
-      wait_idle(pid)
-    end
+  def poke(pid) do
+    GenServer.call(pid, :poke)
+  end
+
+  def dump(pid) do
+    GenServer.call(pid, :dump)
   end
 
   def stop(pid) do
@@ -60,67 +46,51 @@ defmodule StenoBot.Sandbox do
   ## implementation
   ##
   def init(state) do
-    state = state
-    |> queue_add({"launch", "boot", [sandbox_name(state.sb_id)]})
-    |> spawn_next
+    cmd = {"boot", "launch", [sandbox_name(state.sb_id)]}
+    state = spawn_cmd(state, cmd)
     {:ok, state}
   end
 
   def handle_call({:listen, ondata}, _from, state) do
-    Enum.each state.output, fn item ->
+    Enum.each Enum.reverse(state.output), fn item ->
       ondata.(item)
     end
     {:reply, :ok, %{state | ondata: ondata}}
   end
 
-  def handle_call({:exec, phase, cmd}, _from, state) do
-    sbname = sandbox_name(state.sb_id)
-    state = state
-    |> queue_add({"exec", phase, [sbname, cmd]})
-    |> spawn_next
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:push, src, dst}, _from, state) do
-    sbname = sandbox_name(state.sb_id)
-    state = state
-    |> queue_add({"push", "push", [sbname, src, dst]})
-    |> spawn_next
-    {:reply, :ok, state}
+  def handle_call(:poke, _from, state) do
+    if !state.active do
+      {:reply, :ok, get_and_run_job(state)}
+    else
+      {:reply, :ok, state}
+    end
   end
 
   def handle_call(:dump, _from, state) do
     {:reply, state, state}
   end
 
+  def handle_call({:exec, phase, cmd}, _from, state) do
+    sbname = sandbox_name(state.sb_id)
+    state = spawn_cmd(state, {phase, "exec", [sbname, cmd]})
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:push, src, dst}, _from, state) do
+    sbname = sandbox_name(state.sb_id)
+    state = spawn_cmd(state, {"push", "push", [sbname, src, dst]})
+    {:reply, :ok, state}
+  end
+
   def handle_call(:idle?, _from, state) do
-    {:reply, (!state.active && :queue.is_empty(state.queue)), state}
+    {:reply, !state.active, state}
   end
 
   def handle_call(:stop, _from, state) do
     {:stop, :normal, {:ok, state}, state}
   end
 
-  defp queue_add(state, item) do
-    %{ state | queue: :queue.snoc(state.queue, item) }
-  end
-
-  def get_and_run_job(state) do
-    job = StenoBot.Queue.get()
-    if job do
-      run_job(state, job)
-    else
-      state
-    end
-  end
-
-  def run_job(state, job) do
-    IO.inspect(job)
-    IO.puts(make_driver(job))
-    state
-  end
-
-  defp spawn_cmd({script, phase, args}) do
+  defp spawn_cmd(state, {phase, script, args}) do
     args1 = Enum.join(Enum.map(args, &(~s["#{&1}"])), " ")
 
     proc = Porcelain.spawn_shell(
@@ -128,25 +98,9 @@ defmodule StenoBot.Sandbox do
       out: {:send, self()},
       err: {:send, self()})
 
-    {:ok, proc, phase}
-  end
-
-  defp spawn_next(state) do
-    if !state.active && :queue.is_empty(state.queue) do
-      StenoBot.Sandbox.Sup.signal(state.sb_id)
-    end
-
-    if state.active || :queue.is_empty(state.queue) do
-      state
-    else
-      next = :queue.get(state.queue)
-      {:ok, proc, phase} = spawn_cmd(next)
-
-      state
-      |> Map.put(:queue,  :queue.drop(state.queue))
-      |> Map.put(:active, proc)
-      |> Map.put(:phase,  phase)
-    end
+    state
+    |> Map.put(:active, proc)
+    |> Map.put(:phase, phase)
   end
 
   defp script_path(name) do
@@ -169,13 +123,33 @@ defmodule StenoBot.Sandbox do
   end
 
   def make_driver(job) do
-    job = job
-    |> Map.drop(:__struct__, :__meta__)
-    |> Map.put(:timeout, 60)
-    |> Map.put(:cookie, :crypto.strong_rand_bytes(16) |> Base.encode16)
-    |> Enum.into([])
     base = Application.app_dir(:steno_bot, "priv")
     EEx.eval_file("#{base}/scripts/driver.pl.eex", Enum.into(job, []))
+  end
+
+  defp get_and_run_job(state) do
+    case StenoBot.Queue.get() do
+      {:ok, job} ->
+        IO.inspect(job)
+        run_job(state, job)
+      _else ->
+        IO.inspect("No jobs");
+        state
+    end
+  end
+
+  defp run_job(state, job) do
+    {:ok, fd, path} = Temp.open("driver")
+    driver = make_driver(job)
+    IO.puts(driver)
+    IO.write(fd, driver)
+    File.close(fd)
+
+
+    state = spawn_cmd(state, {"exec", "run-job", [sandbox_name(state.sb_id), path]})
+
+    File.rm(path)
+    state
   end
 
   ##
@@ -194,13 +168,19 @@ defmodule StenoBot.Sandbox do
   end
 
   def handle_info({_src, :result, result}, state) do
-    state = state
-    |> Map.put(:active, nil)
-    |> spawn_next
     if state.ondata do
       state.ondata.({:done, result})
     end
-    {:noreply, state}
+
+    case state.phase do
+      "boot" ->
+        state = state
+        |> Map.put(:active, nil)
+        |> get_and_run_job
+        {:noreply, state}
+      _ ->
+        {:stop, :normal, state}
+    end
   end
 end
 

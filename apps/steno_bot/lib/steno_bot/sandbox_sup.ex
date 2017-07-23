@@ -15,8 +15,8 @@ defmodule StenoBot.Sandbox.Sup do
     GenServer.call(:sandbox_sup, :status)
   end
 
-  def signal(sb_id) do
-    GenServer.call(:sandbox_sup, {:signal, sb_id})
+  def poke() do
+    GenServer.call(:sandbox_sup, :poke)
   end
 
   ##
@@ -39,13 +39,10 @@ defmodule StenoBot.Sandbox.Sup do
     {:reply, state, state}
   end
 
-  def handle_call({:signal, sb_id}, _from, state) do
-    IO.puts "#{node()}: Sandbox id=#{sb_id} ready."
-    {:reply, :ok, state}
-  end
-
-  def handle_call(:run, _from, state) do
-    IO.puts "#{node()}: Got run request."
+  def handle_call(:poke, _from, state) do
+    Enum.each :queue.to_list(state.kids), fn {_, pid} ->
+      Sandbox.poke(pid)
+    end
     {:reply, :ok, state}
   end
 
