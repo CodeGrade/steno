@@ -11,6 +11,7 @@ defmodule StenoDemo.RunJob do
         "gra_url":  "http://192.168.1.146:5000/uploads/#{job.grading_id}",
         "gra_name": "#{job.grading.name}",
         "timeout":  60,
+        "postback": "http://192.168.1.146:5000/jobs/#{job.id}",
       },
     }
 
@@ -19,8 +20,6 @@ defmodule StenoDemo.RunJob do
       {"Accept", "application/json"},
     ]
 
-    resp = HTTPoison.post(url, Poison.encode!(body), hdrs)
-    IO.inspect(resp)
-    resp
+    HTTPoison.post(url, Poison.encode!(body), hdrs)
   end
 end

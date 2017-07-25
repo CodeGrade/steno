@@ -51,7 +51,27 @@ defmodule Steno.Grading.Queue do
     if res.id do
       Steno.Grading.get_job!(res.id)
       |> Steno.Grading.update_job(res)
+
+      Task.start fn ->
+        postback(res.id)
+      end
     end
     {:reply, :ok, state}
+  end
+
+  def postback(job_id) do
+    job  = Steno.Grading.get_job!(job_id)
+    url  = job.postback
+    body = %{
+      "job": %{
+        "output": job.output,
+      },
+    }
+    hdrs = [
+      {"Content-Type", "application/json"},
+      {"Accept", "application/json"},
+    ]
+
+    HTTPoison.patch(url, Poison.encode!(body), hdrs)
   end
 end

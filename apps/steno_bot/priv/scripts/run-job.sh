@@ -3,9 +3,6 @@ NAME=$1
 DRVR=$2
 
 echo "## Pushing $DRVR..."
-ls /tmp/driver*
-cat $DRVR
-
 lxc file push "$DRVR" "$NAME/root/driver.pl" || echo "Error: $?"
 
 echo "## Running driver..."

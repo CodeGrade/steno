@@ -9,6 +9,7 @@ defmodule Steno.Grading.Job do
     field :gra_name, :string
     field :sub_url, :string
     field :sub_name, :string
+    field :postback, :string
     field :cookie, :string
     field :timeout, :integer
     field :output, :string
@@ -20,7 +21,8 @@ defmodule Steno.Grading.Job do
   @doc false
   def changeset(%Job{} = job, attrs) do
     job
-    |> cast(attrs, [:sub_url, :sub_name, :gra_url, :gra_name, :output, :started_at, :cookie, :timeout])
-    |> validate_required([:sub_url, :sub_name, :gra_url, :gra_name, :cookie, :timeout])
+    |> cast(attrs, [:sub_url, :sub_name, :gra_url, :gra_name, :postback,
+                    :output, :started_at, :cookie, :timeout])
+    |> validate_required([:sub_url, :sub_name, :gra_url, :gra_name, :postback, :cookie, :timeout])
   end
 end

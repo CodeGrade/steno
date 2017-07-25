@@ -41,7 +41,10 @@ defmodule Steno.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
-     {:syn, "~> 1.6"},]
+     {:syn, "~> 1.6"},
+     {:httpoison, "~> 0.12"},
+     {:poison, "~> 3.1"},
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

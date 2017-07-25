@@ -9,7 +9,9 @@
 
   <li>
     <strong>Output:</strong>
-    <%= @job.output %>
+    <pre>
+      <%= @job.output %>
+    </pre>
   </li>
 
 </ul>
