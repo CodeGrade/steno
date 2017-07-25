@@ -13,6 +13,14 @@ defmodule Steno.Grading.Queue do
     GenServer.call(:grading_queue, :run)
   end
 
+  def get do
+    GenServer.call(:grading_queue, :get)
+  end
+
+  def done(job) do
+    GenServer.call(:grading_queue, {:done, job})
+  end
+
   ##
   ## implementation
   ##
@@ -32,5 +40,18 @@ defmodule Steno.Grading.Queue do
   def handle_call(:get, _from, state) do
     job = Steno.Grading.checkout_job()
     {:reply, job, state}
+  end
+
+  def handle_call({:done, res}, _from, state) do
+    IO.inspect({:queue, :done, res})
+    if res.output do
+      IO.puts res.output
+    end
+
+    if res.id do
+      Steno.Grading.get_job!(res.id)
+      |> Steno.Grading.update_job(res)
+    end
+    {:reply, :ok, state}
   end
 end

@@ -2,4 +2,4 @@
 mix clean
 mix compile
 mix compile.protocols --force
-iex --sname steno -S mix phx.server
+iex -S mix phx.server

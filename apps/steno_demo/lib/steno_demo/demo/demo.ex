@@ -131,7 +131,10 @@ defmodule StenoDemo.Demo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_job!(id), do: Repo.get!(Job, id)
+  def get_job!(id) do
+    Repo.get!(Job, id)
+    |> Repo.preload([:upload, :grading])
+  end
 
   @doc """
   Creates a job.

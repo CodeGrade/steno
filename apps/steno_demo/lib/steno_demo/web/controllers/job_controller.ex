@@ -3,6 +3,11 @@ defmodule StenoDemo.Web.JobController do
 
   alias StenoDemo.Demo
 
+  def run(conn, %{"id" => id}) do
+    StenoDemo.RunJob.run(id)
+    render(conn, "run.html", id: id)
+  end
+
   def index(conn, _params) do
     jobs = Demo.list_jobs()
     render(conn, "index.html", jobs: jobs)

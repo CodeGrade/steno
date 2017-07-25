@@ -1,8 +1,8 @@
-defmodule StenoBot.Mixfile do
+defmodule StenoQueue.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :steno_bot,
+    [app: :steno_queue,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -11,7 +11,6 @@ defmodule StenoBot.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     aliases: aliases(),
      deps: deps()]
   end
 
@@ -20,8 +19,7 @@ defmodule StenoBot.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger],
-     mod: {StenoBot.Application, []}]
+    [extra_applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -38,21 +36,6 @@ defmodule StenoBot.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:porcelain, "~> 2.0"},
-     {:temp, "~> 0.4"},
-     {:syn, "~> 1.6"}]
-  end
-
-  defp aliases do
-    ["deps.get": [&get_goon/1, "deps.get"]]
-  end
-
-  defp get_goon(_) do
-    unless File.exists?("goon") do
-      goon_url = "https://github.com/alco/goon/releases/download/v1.1.1/goon_linux_amd64.tar.gz"
-      System.cmd("bash", ["-c", "wget -O /tmp/goon.tar.gz #{goon_url}"])
-      System.cmd("bash", ["-c", "(cd /tmp && tar xzf goon.tar.gz)"])
-      System.cmd("bash", ["-c", "cp /tmp/goon ."])
-    end
+    [{:syn, "~> 1.6"}]
   end
 end

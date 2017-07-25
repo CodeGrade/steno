@@ -48,6 +48,18 @@ exports.config = {
     babel: {
       // Do not use ES6 compiler in vendor code
       ignore: [/vendor/]
+    },
+    sass: {
+      options: {
+        includePaths: [
+          "node_modules/bootstrap-sass/assets/stylesheets",
+          "node_modules/xterm/dist",
+        ],
+        precision: 8
+      }
+    },
+    copycat: {
+      "fonts": ["node_modules/bootstrap-sass/assets/fonts/bootstrap"]
     }
   },
 
@@ -58,6 +70,10 @@ exports.config = {
   },
 
   npm: {
-    enabled: true
+    enabled: true,
+    globals: {
+      $: 'jquery',
+        jQuery: 'jquery'
+      }
   }
 };

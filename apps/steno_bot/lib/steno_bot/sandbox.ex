@@ -6,29 +6,27 @@ defmodule StenoBot.Sandbox do
   def start_link(sandbox_id) do
     state0 = %{
       sb_id:  sandbox_id,
+      job_id: nil,
+      cookie: nil,
       serial: 0,
       output: [],
       active: nil,
-      ondata: nil,
+      relays: [],
       phase: "preboot",
     }
     GenServer.start_link(__MODULE__, state0)
   end
 
-  def listen(pid, ondata) do
-    GenServer.call(pid, {:listen, ondata})
-  end
-
-  def idle?(pid) do
-    GenServer.call(pid, :idle?)
-  end
-
   def poke(pid) do
-    GenServer.call(pid, :poke)
+    GenServer.cast(pid, :poke)
   end
 
   def dump(pid) do
     GenServer.call(pid, :dump)
+  end
+
+  def subscribe(pid, relay_pid) do
+    GenServer.call(pid, {:subscribe, relay_pid})
   end
 
   def stop(pid) do
@@ -51,18 +49,11 @@ defmodule StenoBot.Sandbox do
     {:ok, state}
   end
 
-  def handle_call({:listen, ondata}, _from, state) do
-    Enum.each Enum.reverse(state.output), fn item ->
-      ondata.(item)
-    end
-    {:reply, :ok, %{state | ondata: ondata}}
-  end
-
-  def handle_call(:poke, _from, state) do
-    if !state.active do
-      {:reply, :ok, get_and_run_job(state)}
+  def handle_cast(:poke, state) do
+    if state.active do
+      {:noreply, state}
     else
-      {:reply, :ok, state}
+      {:noreply, get_and_run_job(state)}
     end
   end
 
@@ -70,20 +61,11 @@ defmodule StenoBot.Sandbox do
     {:reply, state, state}
   end
 
-  def handle_call({:exec, phase, cmd}, _from, state) do
-    sbname = sandbox_name(state.sb_id)
-    state = spawn_cmd(state, {phase, "exec", [sbname, cmd]})
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:push, src, dst}, _from, state) do
-    sbname = sandbox_name(state.sb_id)
-    state = spawn_cmd(state, {"push", "push", [sbname, src, dst]})
-    {:reply, :ok, state}
-  end
-
-  def handle_call(:idle?, _from, state) do
-    {:reply, !state.active, state}
+  def handle_call({:subscribe, pid}, _from, state) do
+    Enum.each Enum.reverse(state.output), fn item ->
+      GenServer.cast(pid, item)
+    end
+    {:reply, :ok, %{state | relays: [ pid | state.relays ]}}
   end
 
   def handle_call(:stop, _from, state) do
@@ -139,17 +121,26 @@ defmodule StenoBot.Sandbox do
   end
 
   defp run_job(state, job) do
+    :syn.register({:job_sandbox, job.id}, self())
+
     {:ok, fd, path} = Temp.open("driver")
+    Temp.track!
+
     driver = make_driver(job)
-    IO.puts(driver)
     IO.write(fd, driver)
     File.close(fd)
-
+    IO.inspect(System.cmd("cat", [path]))
 
     state = spawn_cmd(state, {"exec", "run-job", [sandbox_name(state.sb_id), path]})
+    IO.inspect(System.cmd("cat", [path]))
 
-    File.rm(path)
-    state
+    %{ state | cookie: job.cookie, job_id: job.id }
+  end
+
+  defp send_relays(state, msg) do
+    Enum.each state.relays, fn pid ->
+      GenServer.cast(pid, msg)
+    end
   end
 
   ##
@@ -161,16 +152,13 @@ defmodule StenoBot.Sandbox do
     state  = state
     |> Map.put(:output, [ item | state.output ])
     |> Map.put(:serial, serial)
-    if state.ondata do
-      state.ondata.({:data, item})
-    end
+
+    send_relays(state, {:data, item})
     {:noreply, state}
   end
 
   def handle_info({_src, :result, result}, state) do
-    if state.ondata do
-      state.ondata.({:done, result})
-    end
+    send_relays(state, {:done, result})
 
     case state.phase do
       "boot" ->
@@ -178,9 +166,26 @@ defmodule StenoBot.Sandbox do
         |> Map.put(:active, nil)
         |> get_and_run_job
         {:noreply, state}
-      _ ->
+      phase ->
+        StenoBot.Queue.done(%{
+              id: state.job_id,
+              cookie: state.cookie,
+              output: format_output(state.output),
+        })
+        IO.inspect({:stopping, :sandbox_phase, phase})
         {:stop, :normal, state}
     end
+  end
+
+  defp format_output(output) do
+    grouped = output
+    |> Enum.sort_by(fn {n, _, _, _} -> n end)
+    |> Enum.group_by(fn {_, _, t, _} -> t end)
+
+    stdout = Enum.map_join(grouped[:out] || [], "", fn {_, _, _, m} -> m end)
+    stderr = Enum.map_join(grouped[:err] || [], "", fn {_, _, _, m} -> m end)
+
+    "== stdout ==\n#{stdout}\n== stderr ==\n#{stderr}"
   end
 end
 

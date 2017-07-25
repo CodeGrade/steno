@@ -8,7 +8,7 @@ class Steno
   def initialize
     @cookie  = ENV.delete("COOKIE")  || "COOKIE"
     @sub     = ENV.delete("SUB") or raise Exception.new("Must set SUB env var")
-    @timeout = ENV.delete("TIMEOUT") || 60
+    @timeout = (ENV.delete("TIMEOUT") || 60).to_i
     @ktime   = @timeout + 10
     @hashes  = {}
   end

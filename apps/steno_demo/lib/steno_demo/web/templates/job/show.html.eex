@@ -14,5 +14,10 @@
 
 </ul>
 
+<%= form_tag job_path(@conn, :run, @job) do %>
+  <%= submit "Run", class: "btn btn-primary" %>
+<% end %>
+
+
 <span><%= link "Edit", to: job_path(@conn, :edit, @job) %></span>
 <span><%= link "Back", to: job_path(@conn, :index) %></span>

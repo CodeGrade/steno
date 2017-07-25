@@ -19,6 +19,7 @@ defmodule StenoDemo.Web.Router do
     get "/", PageController, :index
     resources "/uploads", UploadController
     resources "/jobs", JobController
+    post "/jobs/:id/run", JobController, :run
   end
 
   # Other scopes may use custom stacks.

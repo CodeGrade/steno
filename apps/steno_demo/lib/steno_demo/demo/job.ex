@@ -2,12 +2,13 @@ defmodule StenoDemo.Demo.Job do
   use Ecto.Schema
   import Ecto.Changeset
   alias StenoDemo.Demo.Job
+  alias StenoDemo.Demo.Upload
 
   schema "jobs" do
     field :output, :string
     field :sandbox_id, :integer
-    field :upload_id, :id
-    field :grading_id, :id
+    belongs_to :upload, Upload
+    belongs_to :grading, Upload, foreign_key: :grading_id
 
     timestamps()
   end

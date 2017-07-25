@@ -2,5 +2,11 @@
 NAME=$1
 DRVR=$2
 
-lxc file push "$DRVR" "$NAME/root/driver.pl"
-lxc exec "$NAME" -- bash -c "perl /root/driver.pl"
+echo "## Pushing $DRVR..."
+ls /tmp/driver*
+cat $DRVR
+
+lxc file push "$DRVR" "$NAME/root/driver.pl" || echo "Error: $?"
+
+echo "## Running driver..."
+lxc exec "$NAME" -- bash -c "perl /root/driver.pl" || echo "Error: $?"

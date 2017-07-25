@@ -3,6 +3,7 @@ defmodule Steno.Web.UserSocket do
 
   ## Channels
   # channel "room:*", Steno.Web.RoomChannel
+  channel "jobs:*", Steno.Web.JobChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
