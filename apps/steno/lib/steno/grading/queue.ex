@@ -21,6 +21,10 @@ defmodule Steno.Grading.Queue do
     GenServer.call(:grading_queue, {:done, job})
   end
 
+  def resend(job_id) do
+    GenServer.call(:grading_queue, {:resend, job_id})
+  end
+
   ##
   ## implementation
   ##
@@ -30,9 +34,9 @@ defmodule Steno.Grading.Queue do
     {:ok, state}
   end
 
-  def handle_call({:relay, job_id, data}, _from, state) do
-    IO.inspect({:relay, job_id, data})
-    Steno.Web.Endpoint.broadcast!("jobs:#{job_id}", "chunks", %{chunks: [data]})
+  def handle_call({:relay, job_id, items}, _from, state) do
+    IO.inspect({:relay, job_id, items})
+    Steno.Web.Endpoint.broadcast!("jobs:#{job_id}", "chunks", %{chunks: items})
     {:reply, :ok, state}
   end
 
@@ -61,6 +65,14 @@ defmodule Steno.Grading.Queue do
       Task.start fn ->
         postback(res.id)
       end
+    end
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:resend, job_id}, _from, state) do
+    pid = :syn.find_by_key({:job_sandbox, job_id})
+    if pid != :undefined do
+      GenServer.cast(pid, :resend)
     end
     {:reply, :ok, state}
   end

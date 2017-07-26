@@ -3,6 +3,8 @@ defmodule Steno.Web.JobChannel do
 
   def join("jobs:" <> job_id, payload, socket) do
     if authorized?(payload) do
+      {job_id, _} = Integer.parse(job_id)
+      Steno.Grading.Queue.resend(job_id)
       {:ok, assign(socket, :job_id, job_id)}
     else
       {:error, %{reason: "unauthorized"}}

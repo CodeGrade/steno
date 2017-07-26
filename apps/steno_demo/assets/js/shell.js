@@ -13,6 +13,9 @@ function connect() {
     .receive("error", resp => { console.log("Unable to join", resp); });
 }
 
+var chunks = {};
+var last = 0;
+
 $(function() {
   if (!$('#xterm')) {
     console.log("no #xterm");
@@ -22,10 +25,20 @@ $(function() {
   connect();
 
   channel.on("chunks", resp => {
-    term.reset();
     _.each(resp.chunks, cc => {
-      cc = cc.replace(/\n/g, "\r\n");
-      term.write(cc);
+      if (cc.serial > last) {
+        last = cc.serial;
+      }
+
+      cc.data = cc.data.replace(/\n/g, "\r\n");
+      chunks[cc.serial] = cc;
+    });
+
+    term.reset();
+
+    _.each(_.range(last), ii => {
+      var cc = chunks[ii] || {};
+      term.write(cc.data || "");
     });
   });
 

@@ -11,7 +11,6 @@ defmodule StenoBot.Sandbox do
       serial: 0,
       output: [],
       active: nil,
-      relays: [],
       phase: "preboot",
     }
     GenServer.start_link(__MODULE__, state0)
@@ -23,10 +22,6 @@ defmodule StenoBot.Sandbox do
 
   def dump(pid) do
     GenServer.call(pid, :dump)
-  end
-
-  def subscribe(pid, relay_pid) do
-    GenServer.call(pid, {:subscribe, relay_pid})
   end
 
   def stop(pid) do
@@ -57,15 +52,13 @@ defmodule StenoBot.Sandbox do
     end
   end
 
-  def handle_call(:dump, _from, state) do
-    {:reply, state, state}
+  def handle_cast(:resend, state) do
+    send_relay(state.job_id, Enum.reverse(state.output))
+    {:noreply, state}
   end
 
-  def handle_call({:subscribe, pid}, _from, state) do
-    Enum.each Enum.reverse(state.output), fn item ->
-      GenServer.cast(pid, item)
-    end
-    {:reply, :ok, %{state | relays: [ pid | state.relays ]}}
+  def handle_call(:dump, _from, state) do
+    {:reply, state, state}
   end
 
   def handle_call(:stop, _from, state) do
@@ -135,14 +128,9 @@ defmodule StenoBot.Sandbox do
     %{ state | cookie: job.cookie, job_id: job.id }
   end
 
-  defp send_relays(state, msg) do
-    Enum.each state.relays, fn pid ->
-      GenServer.cast(pid, msg)
-    end
-
-    if state.job_id do
-      IO.inspect({:msg, msg})
-      StenoBot.Queue.relay(state.job_id, inspect(msg))
+  defp send_relay(job_id, items) do
+    if job_id do
+      StenoBot.Queue.relay(job_id, items)
     end
   end
 
@@ -151,18 +139,22 @@ defmodule StenoBot.Sandbox do
   ##
   def handle_info({_src, :data, stream, data}, state) do
     serial = state.serial + 1
-    item   = {serial, state.phase, stream, data}
+    item   = %{
+      serial: serial,
+      phase:  state.phase,
+      stream: stream,
+      data:   data
+    }
+
     state  = state
     |> Map.put(:output, [ item | state.output ])
     |> Map.put(:serial, serial)
 
-    send_relays(state, {:data, item})
+    send_relay(state.job_id, [item])
     {:noreply, state}
   end
 
   def handle_info({_src, :result, result}, state) do
-    send_relays(state, {:done, result})
-
     case state.phase do
       "boot" ->
         state = state
@@ -175,18 +167,17 @@ defmodule StenoBot.Sandbox do
               cookie: state.cookie,
               output: format_output(state.output),
         })
-        IO.inspect({:stopping, :sandbox_phase, phase})
         {:stop, :normal, state}
     end
   end
 
   defp format_output(output) do
     grouped = output
-    |> Enum.sort_by(fn {n, _, _, _} -> n end)
-    |> Enum.group_by(fn {_, _, t, _} -> t end)
+    |> Enum.sort_by( fn item -> item.serial end)
+    |> Enum.group_by(fn item -> item.stream end)
 
-    stdout = Enum.map_join(grouped[:out] || [], "", fn {_, _, _, m} -> m end)
-    stderr = Enum.map_join(grouped[:err] || [], "", fn {_, _, _, m} -> m end)
+    stdout = Enum.map_join(grouped[:out] || [], "", fn item -> item.data end)
+    stderr = Enum.map_join(grouped[:err] || [], "", fn item -> item.data end)
 
     "== stdout ==\n#{stdout}\n== stderr ==\n#{stderr}"
   end
