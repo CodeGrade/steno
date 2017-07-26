@@ -1,3 +1,9 @@
 <p>Should be running the joerb: id = <%= @id %>.</p>
 
+<script>
+  window.job_id = <%= @remote_id %>;
+</script>
+
+<div id="xterm">
+</div>
 

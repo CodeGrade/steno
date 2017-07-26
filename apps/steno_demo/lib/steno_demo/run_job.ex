@@ -1,7 +1,6 @@
 defmodule StenoDemo.RunJob do
   def run(job_id) do
     job = StenoDemo.Demo.get_job!(job_id)
-    IO.inspect {:run_job, job}
 
     url = 'http://127.0.0.1:4000/api/v1/jobs'
     body = %{
@@ -20,6 +19,8 @@ defmodule StenoDemo.RunJob do
       {"Accept", "application/json"},
     ]
 
-    HTTPoison.post(url, Poison.encode!(body), hdrs)
+    {:ok, resp} = HTTPoison.post(url, Poison.encode!(body), hdrs)
+    body = Poison.decode!(resp.body)["data"]
+    body["id"]
   end
 end

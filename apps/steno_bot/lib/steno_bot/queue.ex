@@ -11,6 +11,11 @@ defmodule StenoBot.Queue do
 
   def done(job) do
     call({:done, job})
+    call({:relay, job.id, job.output})
+  end
+
+  def relay(job_id, msg) do
+    call({:relay, job_id, msg})
   end
 
   defp call(msg) do

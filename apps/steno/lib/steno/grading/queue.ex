@@ -30,6 +30,12 @@ defmodule Steno.Grading.Queue do
     {:ok, state}
   end
 
+  def handle_call({:relay, job_id, data}, _from, state) do
+    IO.inspect({:relay, job_id, data})
+    Steno.Web.Endpoint.broadcast!("jobs:#{job_id}", "chunks", %{chunks: [data]})
+    {:reply, :ok, state}
+  end
+
   def handle_call(:run, _from, state) do
     Enum.each :syn.get_members(:bots), fn bsup ->
       GenServer.call(bsup, :poke)

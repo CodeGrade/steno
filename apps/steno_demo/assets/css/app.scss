@@ -1,7 +1,7 @@
 
 $icon-font-path: "/fonts/";
 @import "bootstrap";
-//@import "xterm";
+@import "xterm";
 
 div#xterm    { padding: 1ex; background: black; }
 div.terminal { font-family: "Droid Sans Mono"; font-size: 12pt }

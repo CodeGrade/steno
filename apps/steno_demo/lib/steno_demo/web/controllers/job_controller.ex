@@ -4,8 +4,8 @@ defmodule StenoDemo.Web.JobController do
   alias StenoDemo.Demo
 
   def run(conn, %{"id" => id}) do
-    StenoDemo.RunJob.run(id)
-    render(conn, "run.html", id: id)
+    remote_id = StenoDemo.RunJob.run(id)
+    render(conn, "run.html", id: id, remote_id: remote_id)
   end
 
   def index(conn, _params) do

@@ -15,6 +15,7 @@ defmodule Steno.Application do
       # Start your own worker by calling: Steno.Worker.start_link(arg1, arg2, arg3)
       # worker(Steno.Worker, [arg1, arg2, arg3]),
       worker(Steno.Grading.Queue, []),
+      #worker(Steno.Relay, []),
     ]
 
     # We're here.

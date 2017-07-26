@@ -1,9 +1,9 @@
 defmodule Steno.Web.JobChannel do
   use Steno.Web, :channel
 
-  def join("jobs:" <> _job_id, payload, socket) do
+  def join("jobs:" <> job_id, payload, socket) do
     if authorized?(payload) do
-      {:ok, socket}
+      {:ok, assign(socket, :job_id, job_id)}
     else
       {:error, %{reason: "unauthorized"}}
     end

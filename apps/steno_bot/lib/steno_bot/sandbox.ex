@@ -129,10 +129,8 @@ defmodule StenoBot.Sandbox do
     driver = make_driver(job)
     IO.write(fd, driver)
     File.close(fd)
-    IO.inspect(System.cmd("cat", [path]))
 
     state = spawn_cmd(state, {"exec", "run-job", [sandbox_name(state.sb_id), path]})
-    IO.inspect(System.cmd("cat", [path]))
 
     %{ state | cookie: job.cookie, job_id: job.id }
   end
@@ -140,6 +138,11 @@ defmodule StenoBot.Sandbox do
   defp send_relays(state, msg) do
     Enum.each state.relays, fn pid ->
       GenServer.cast(pid, msg)
+    end
+
+    if state.job_id do
+      IO.inspect({:msg, msg})
+      StenoBot.Queue.relay(state.job_id, inspect(msg))
     end
   end
 
