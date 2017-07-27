@@ -9,7 +9,10 @@
 
     <title>Hello StenoDemo!</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
-    <script>window.userToken = "";</script>
+    <script>
+     window.userToken = "";
+     window.socketURL = "<%= socket_url(@conn) %>";
+    </script>
   </head>
 
   <body>

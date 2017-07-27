@@ -8,7 +8,8 @@ use Mix.Config
 # General application configuration
 config :steno_demo,
   namespace: StenoDemo,
-  ecto_repos: [StenoDemo.Repo]
+  ecto_repos: [StenoDemo.Repo],
+  env: Mix.env
 
 # Configures the endpoint
 config :steno_demo, StenoDemo.Web.Endpoint,
