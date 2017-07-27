@@ -72,7 +72,8 @@ get_secret = fn name ->
   unless File.exists?(secret) do
     :ok = File.write(secret, :crypto.strong_rand_bytes(16) |> Base.encode16)
   end
-  File.read(secret)
+  {:ok, secret} = File.read(secret)
+  secret
 end
 
 config :steno_demo, StenoDemo.Web.Endpoint,
