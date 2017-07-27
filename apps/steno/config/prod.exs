@@ -61,4 +61,29 @@ config :logger, level: :info
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
-import_config "prod.secret.exs"
+#import_config "prod.secret.exs"
+
+get_secret = fn name ->
+  confdir = Path.expand("~/.config/steno")
+  unless File.dir?(confdir) do
+    :ok = File.mkdir_p(confdir)
+  end
+
+  secret = Path.join(confdir, "#{name}.secret")
+  unless File.exists?(secret) do
+    :ok = File.write(secret, :crypto.strong_rand_bytes(16) |> Base.encode16)
+  end
+  File.read(secret)
+end
+
+config :steno, Steno.Web.Endpoint,
+  secret_key_base: get_secret.("base")
+
+# Configure your database
+config :steno, Steno.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "steno",
+  password: get_secret.("dbpass"),
+  database: "steno_prod",
+  pool_size: 15
+

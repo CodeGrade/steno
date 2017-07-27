@@ -6,6 +6,7 @@ var channel;
 var term;
 
 function connect() {
+  socket.connect();
   console.log("Connecting to jobs:" + window.job_id);
   channel = socket.channel("jobs:" + window.job_id, {});
   channel.join()
@@ -17,7 +18,7 @@ var chunks = {};
 var last = 0;
 
 $(function() {
-  if (!$('#xterm')) {
+  if ($('#xterm').length == 0) {
     console.log("no #xterm");
     return;
   }
@@ -25,18 +26,20 @@ $(function() {
   connect();
 
   channel.on("chunks", resp => {
+    console.log(resp);
+
     _.each(resp.chunks, cc => {
       if (cc.serial > last) {
         last = cc.serial;
       }
 
-      cc.data = cc.data.replace(/\n/g, "\r\n");
+      cc.data = (cc.data || "").replace(/\n/g, "\r\n");
       chunks[cc.serial] = cc;
     });
 
     term.reset();
 
-    _.each(_.range(last), ii => {
+    _.each(_.range(last + 1), ii => {
       var cc = chunks[ii] || {};
       term.write(cc.data || "");
     });

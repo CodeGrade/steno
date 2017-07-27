@@ -69,7 +69,7 @@ defmodule StenoBot.Sandbox do
     args1 = Enum.join(Enum.map(args, &(~s["#{&1}"])), " ")
 
     proc = Porcelain.spawn_shell(
-      ~s[bash "#{script_path(script)}" #{args1}],
+      ~s[stdbuf -oL -eL bash "#{script_path(script)}" #{args1}],
       out: {:send, self()},
       err: {:send, self()})
 
@@ -162,6 +162,16 @@ defmodule StenoBot.Sandbox do
         |> get_and_run_job
         {:noreply, state}
       phase ->
+        #send_relay(state.job_id, state.output)
+
+        last_msg = %{
+          serial: state.serial + 1,
+          phase:  state.phase,
+          stream: :meta,
+          data:   "~~ done ~~\n",
+        }
+        send_relay(state.job_id, [last_msg])
+
         StenoBot.Queue.done(%{
               id: state.job_id,
               cookie: state.cookie,

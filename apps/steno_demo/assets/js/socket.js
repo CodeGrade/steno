@@ -51,7 +51,7 @@ let socket = new Socket("ws://localhost:4000/socket", {params: {token: window.us
 // Finally, pass the token on connect as below. Or remove it
 // from connect if you don't care about authentication.
 
-socket.connect();
+//socket.connect();
 
 // Now that you are connected, you can join channels with a topic:
 /*
