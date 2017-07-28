@@ -1,5 +1,5 @@
 #!/bin/bash
-BASE=bn-base
+BASE=steno-base
 NAME=$1
 
 lxc launch "$BASE" "$NAME" -e \
