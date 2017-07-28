@@ -11,14 +11,16 @@ while [[ ! `lxc exec "$NAME" -- runlevel` =~ ^N ]]; do
     sleep 1
 done
 
-lxc exec $NAME -- DEBIAN_FRONTEND=noninteractive \
-    apt-get update
-lxc exec $NAME -- DEBIAN_FRONTEND=noninteractive \
-    apt-get upgrade -y
-lxc exec $NAME -- DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y openjdk-8-jdk gradle build-essential clang python3 ruby \
-        libipc-system-simple-perl
+echo "Running apt..."
+lxc exec $NAME -- bash <<END
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get upgrade -y
+apt-get install -y openjdk-8-jdk build-essential \
+    clang python3 ruby libipc-system-simple-perl
+END
 
+echo "Stopping; Publishing..."
 lxc stop $NAME
 lxc publish $NAME --alias steno-base
 lxc delete $NAME
