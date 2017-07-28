@@ -15,7 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :steno, Steno.Web.Endpoint,
   load_from_system_env: true,
-  url: [host: "example.com", port: 80],
+  url: [host: "bn-dev.ccs.neu.edu", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
@@ -63,7 +63,7 @@ config :logger, level: :info
 # which should be versioned separately.
 #import_config "prod.secret.exs"
 
-get_secret = fn name ->
+get_secret = fn name, size ->
   confdir = Path.expand("~/.config/steno")
   unless File.dir?(confdir) do
     :ok = File.mkdir_p(confdir)
@@ -71,20 +71,20 @@ get_secret = fn name ->
 
   secret = Path.join(confdir, "#{name}.secret")
   unless File.exists?(secret) do
-    :ok = File.write(secret, :crypto.strong_rand_bytes(16) |> Base.encode16)
+    :ok = File.write(secret, :crypto.strong_rand_bytes(size) |> Base.encode16)
   end
   {:ok, secret} = File.read(secret)
   secret
 end
 
 config :steno, Steno.Web.Endpoint,
-  secret_key_base: get_secret.("base")
+  secret_key_base: get_secret.("base", 32)
 
 # Configure your database
 config :steno, Steno.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "steno",
-  password: get_secret.("dbpass"),
+  password: get_secret.("dbpass", 16),
   database: "steno_prod",
   pool_size: 15
 
