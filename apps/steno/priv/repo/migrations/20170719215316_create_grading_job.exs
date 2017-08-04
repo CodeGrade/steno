@@ -7,6 +7,8 @@ defmodule Steno.Repo.Migrations.CreateSteno.Grading.Job do
       add :sub_name, :string
       add :gra_url, :string
       add :gra_name, :string
+      add :xtr_url, :string
+      add :xtr_name, :string
       add :postback, :string
       add :cookie, :string
       add :timeout, :integer

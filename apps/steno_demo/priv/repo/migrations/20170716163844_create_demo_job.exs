@@ -7,6 +7,7 @@ defmodule StenoDemo.Repo.Migrations.CreateStenoDemo.Demo.Job do
       add :output, :text
       add :upload_id, references(:uploads, on_delete: :nothing)
       add :grading_id, references(:uploads, on_delete: :nothing)
+      add :extra_id, references(:uploads, on_delete: :nothing)
 
       timestamps()
     end

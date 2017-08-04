@@ -51,7 +51,7 @@ defmodule Steno.Grading do
   """
   def create_job(attrs \\ %{}) do
     job = Job.changeset(%Job{}, attrs)
-    IO.inspect(job)
+    #IO.inspect(job)
     {:ok, job} = Repo.insert(job)
     Steno.Grading.Queue.run()
     {:ok, job}

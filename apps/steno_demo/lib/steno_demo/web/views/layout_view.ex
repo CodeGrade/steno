@@ -6,7 +6,7 @@ defmodule StenoDemo.Web.LayoutView do
       :prod ->
         "/socket"
       _else ->
-        "ws://localhost:4000/socket"
+        "ws://localhost:8081/socket"
     end
   end
 end

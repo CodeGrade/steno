@@ -9,6 +9,7 @@ defmodule StenoDemo.Demo.Job do
     field :sandbox_id, :integer
     belongs_to :upload, Upload
     belongs_to :grading, Upload, foreign_key: :grading_id
+    belongs_to :extra, Upload, foreign_key: :extra_id
 
     timestamps()
   end
@@ -16,7 +17,7 @@ defmodule StenoDemo.Demo.Job do
   @doc false
   def changeset(%Job{} = job, attrs) do
     job
-    |> cast(attrs, [:output, :sandbox_id, :upload_id, :grading_id])
+    |> cast(attrs, [:output, :sandbox_id, :upload_id, :grading_id, :extra_id])
     |> validate_required([:grading_id, :upload_id])
   end
 end

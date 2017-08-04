@@ -2,4 +2,4 @@
 mix clean
 mix compile
 mix compile.protocols --force
-iex --sname steno_bot -S mix
+iex --sname bot -S mix

@@ -133,7 +133,7 @@ defmodule StenoDemo.Demo do
   """
   def get_job!(id) do
     Repo.get!(Job, id)
-    |> Repo.preload([:upload, :grading])
+    |> Repo.preload([:upload, :grading, :extra])
   end
 
   @doc """

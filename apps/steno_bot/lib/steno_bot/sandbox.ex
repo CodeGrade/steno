@@ -68,6 +68,8 @@ defmodule StenoBot.Sandbox do
   defp spawn_cmd(state, {phase, script, args}) do
     args1 = Enum.join(Enum.map(args, &(~s["#{&1}"])), " ")
 
+    #IO.inspect(~s[stdbuf -oL -eL bash "#{script_path(script)}" #{args1}])
+
     proc = Porcelain.spawn_shell(
       ~s[stdbuf -oL -eL bash "#{script_path(script)}" #{args1}],
       out: {:send, self()},
@@ -99,6 +101,7 @@ defmodule StenoBot.Sandbox do
 
   def make_driver(job) do
     base = Application.app_dir(:steno_bot, "priv")
+    IO.inspect({:make_driver, job})
     EEx.eval_file("#{base}/scripts/driver.pl.eex", Enum.into(job, []))
   end
 
@@ -120,6 +123,7 @@ defmodule StenoBot.Sandbox do
     Temp.track!
 
     driver = make_driver(job)
+    IO.puts(driver)
     IO.write(fd, driver)
     File.close(fd)
 

@@ -3,6 +3,25 @@
 <ul>
 
   <li>
+    <strong>Sub:</strong>
+    <%= @job.upload_id %> (<%= @job.upload.name %>)
+  </li>
+
+  <li>
+    <strong>Gra:</strong>
+    <%= @job.grading_id %> (<%=@job.grading.name%>)
+  </li>
+
+  <li>
+    <strong>Xtr:</strong>
+    <%= if @job.extra_id do %>
+      <%= @job.extra_id %> (<%= @job.extra.name %>)
+    <% else %>
+      none
+    <% end %>
+  </li>
+
+  <li>
     <strong>Sandbox:</strong>
     <%= @job.sandbox_id %>
   </li>
