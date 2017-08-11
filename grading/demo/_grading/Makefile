@@ -4,7 +4,7 @@ hello:
 	gcc -o hello hello.c
 
 test:
-	perl test.pl
+	@perl test.pl
 
 clean:
 	rm -f hello
